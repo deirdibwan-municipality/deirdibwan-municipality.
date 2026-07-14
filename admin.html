@@ -95,6 +95,12 @@
   .file-chip a { color: var(--blue); font-weight: 700; text-decoration: none; }
   .file-chip a:hover { text-decoration: underline; }
   .file-chip .fc-remove { cursor: pointer; color: var(--red); font-weight: 900; margin-right: 4px; }
+  .att-chip { display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px; border: 1.5px solid var(--slate-200); border-radius: 20px; background: #fff; font-size: 12px; }
+  .att-chip img.thumb { width: 22px; height: 22px; object-fit: cover; border-radius: 5px; }
+  .att-chip .fc-remove { cursor: pointer; color: var(--red); font-weight: 900; }
+  .news-item .thumb-stack { display: flex; gap: 4px; flex-shrink: 0; }
+  .news-item .thumb-stack img { width: 60px; height: 60px; object-fit: cover; border-radius: 8px; background: var(--slate-200); }
+  .attach-count { display: inline-block; background: var(--navy); color: #fff; font-size: 10px; font-weight: 800; border-radius: 20px; padding: 1px 7px; margin-inline-start: 4px; }
 
   #toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(20px); background: var(--slate-900); color: white; padding: 13px 24px; border-radius: var(--radius); font-size: 13.5px; font-weight: 700; box-shadow: var(--shadow-md); z-index: 9999; opacity: 0; transition: opacity .3s, transform .3s; pointer-events: none; }
   #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
@@ -170,13 +176,9 @@
           <textarea id="newsContent" rows="5" required placeholder="نص الخبر الكامل..."></textarea>
         </div>
         <div class="form-group">
-          <label>مرفق الخبر (صورة أو أي ملف: PDF، Word، Excel...)</label>
-          <input type="file" id="newsImage" onchange="previewNewsImage(this)">
-          <img id="newsImagePreview" style="display:none;max-width:140px;margin-top:8px;border-radius:8px">
-          <div id="newsFilePreview" style="display:none" class="file-chip">
-            <span>📎</span> <span id="newsFileNameLabel"></span>
-            <span class="fc-remove" onclick="clearNewsFile()">✕</span>
-          </div>
+          <label>مرفقات الخبر (يمكن اختيار أكثر من صورة أو ملف: PDF، Word، Excel...)</label>
+          <input type="file" id="newsImage" multiple onchange="handleNewsFiles(this)">
+          <div id="newsFilesList" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:8px"></div>
         </div>
         <div class="form-group">
           <label>الحالة</label>
@@ -259,7 +261,8 @@
   var SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxHvtKVpuPNO6FVbJp_cLjLu_-WHTe-M71SUHQ1jRQer_-6DdRvX0tEINBkRK_9EzwK/exec";
 
   var currentPassword = null;
-  var newsFileData = null, newsFileName = null, newsFileIsImage = false;
+  // newsAttachments: array of { name, isImage, dataUrl (new file, pending upload) | url (existing, already on Drive), existing (bool) }
+  var newsAttachments = [];
   var finFileData = null, finFileName = null;
   var revenueCounter = 0, expenseCounter = 0, allReports = [], chartInstance = null;
 
@@ -341,48 +344,46 @@
     document.getElementById('newsDate').value = item ? item.publishDate : new Date().toISOString().slice(0,10);
     document.getElementById('newsContent').value = item ? item.content : '';
     document.getElementById('newsStatus').value = item ? item.status : 'منشور';
-    clearNewsFile();
-    var pv = document.getElementById('newsImagePreview');
-    var fpv = document.getElementById('newsFilePreview');
-    if (item && item.fileUrl) {
-      var isImg = /\.(jpe?g|png|gif|webp)(\?|$)/i.test(item.fileUrl) || item.fileIsImage;
-      if (isImg) { pv.src = item.fileUrl; pv.style.display = 'block'; fpv.style.display = 'none'; }
-      else {
-        pv.style.display = 'none';
-        document.getElementById('newsFileNameLabel').innerHTML = '<a href="' + item.fileUrl + '" target="_blank">مرفق حالي — عرض</a>';
-        fpv.style.display = 'inline-flex';
-      }
-    } else { pv.style.display = 'none'; fpv.style.display = 'none'; }
+    newsAttachments = [];
+    if (item && item.attachments && item.attachments.length) {
+      item.attachments.forEach(function(a) {
+        newsAttachments.push({ name: a.name || 'مرفق', url: a.url, isImage: !!a.isImage, existing: true });
+      });
+    } else if (item && item.fileUrl) {
+      // توافق مع بيانات قديمة كانت تحفظ مرفق واحد فقط
+      newsAttachments.push({ name: 'مرفق', url: item.fileUrl, isImage: !!item.fileIsImage, existing: true });
+    }
+    document.getElementById('newsImage').value = '';
+    renderNewsAttachments();
     document.getElementById('newsFormCard').scrollIntoView({ behavior: 'smooth' });
   }
-  function closeNewsForm() { document.getElementById('newsFormCard').style.display = 'none'; document.getElementById('newsForm').reset(); clearNewsFile(); }
+  function closeNewsForm() { document.getElementById('newsFormCard').style.display = 'none'; document.getElementById('newsForm').reset(); newsAttachments = []; renderNewsAttachments(); }
 
-  function clearNewsFile() {
-    newsFileData = null; newsFileName = null; newsFileIsImage = false;
-    document.getElementById('newsImage').value = '';
-    document.getElementById('newsImagePreview').style.display = 'none';
-    document.getElementById('newsFilePreview').style.display = 'none';
+  function renderNewsAttachments() {
+    var box = document.getElementById('newsFilesList');
+    box.innerHTML = newsAttachments.map(function(a, i) {
+      var thumb = a.isImage ? '<img class="thumb" src="' + (a.url || a.dataUrl) + '">' : '<span>📎</span>';
+      var label = a.existing ? '<a href="' + a.url + '" target="_blank">' + escapeHtml(a.name) + '</a>' : escapeHtml(a.name);
+      return '<span class="att-chip">' + thumb + '<span>' + label + '</span>' +
+        '<span class="fc-remove" onclick="removeNewsAttachment(' + i + ')">✕</span></span>';
+    }).join('');
   }
 
-  function previewNewsImage(input) {
-    var file = input.files[0]; if (!file) return;
-    newsFileName = file.name;
-    newsFileIsImage = file.type.indexOf('image/') === 0;
-    var reader = new FileReader();
-    reader.onload = function(e) {
-      newsFileData = e.target.result;
-      var pv = document.getElementById('newsImagePreview');
-      var fpv = document.getElementById('newsFilePreview');
-      if (newsFileIsImage) {
-        pv.src = e.target.result; pv.style.display = 'block';
-        fpv.style.display = 'none';
-      } else {
-        pv.style.display = 'none';
-        document.getElementById('newsFileNameLabel').textContent = file.name;
-        fpv.style.display = 'inline-flex';
-      }
-    };
-    reader.readAsDataURL(file);
+  function removeNewsAttachment(i) { newsAttachments.splice(i, 1); renderNewsAttachments(); }
+
+  function handleNewsFiles(input) {
+    var files = Array.prototype.slice.call(input.files);
+    if (!files.length) return;
+    var pending = files.length;
+    files.forEach(function(file) {
+      var reader = new FileReader();
+      reader.onload = function(e) {
+        newsAttachments.push({ name: file.name, isImage: file.type.indexOf('image/') === 0, dataUrl: e.target.result, existing: false });
+        pending--;
+        if (pending === 0) { renderNewsAttachments(); input.value = ''; }
+      };
+      reader.readAsDataURL(file);
+    });
   }
 
   document.addEventListener('DOMContentLoaded', function() {
@@ -398,7 +399,11 @@
         content: document.getElementById('newsContent').value.trim(),
         status: document.getElementById('newsStatus').value
       };
-      if (newsFileData) { payload.fileData = newsFileData; payload.fileName = newsFileName; }
+      // المرفقات الموجودة أصلاً (existing) نبعث روابطها فقط، والملفات الجديدة نبعث محتواها لرفعها
+      payload.keepAttachments = newsAttachments.filter(function(a) { return a.existing; })
+        .map(function(a) { return { name: a.name, url: a.url, isImage: a.isImage }; });
+      payload.newFiles = newsAttachments.filter(function(a) { return !a.existing; })
+        .map(function(a) { return { fileData: a.dataUrl, fileName: a.name }; });
       apiPost(payload).then(function(res) {
         if (res.success) { showToast('✅ تم حفظ الخبر بنجاح', 'success'); closeNewsForm(); loadNewsAdmin(); }
         else showToast('⚠️ ' + (res.error || 'حدث خطأ'), 'error');
@@ -412,10 +417,16 @@
       var list = document.getElementById('newsList');
       if (!res.news.length) { list.innerHTML = '<p style="color:var(--slate-400);font-size:13px">لا توجد أخبار بعد.</p>'; return; }
       list.innerHTML = res.news.map(function(n) {
-        var isImg = n.fileUrl && (/\.(jpe?g|png|gif|webp)(\?|$)/i.test(n.fileUrl) || n.fileIsImage);
-        var img = isImg ? '<img src="' + n.fileUrl + '">' :
-          (n.fileUrl ? '<div style="width:60px;height:60px;border-radius:8px;background:var(--slate-200);display:flex;align-items:center;justify-content:center;flex-shrink:0"><a href="' + n.fileUrl + '" target="_blank" style="font-size:22px;text-decoration:none">📎</a></div>'
-                     : '<div style="width:60px;height:60px;border-radius:8px;background:var(--slate-200);display:flex;align-items:center;justify-content:center;flex-shrink:0">📰</div>');
+        var atts = (n.attachments && n.attachments.length) ? n.attachments : (n.fileUrl ? [{ url: n.fileUrl, isImage: n.fileIsImage }] : []);
+        var img;
+        if (!atts.length) {
+          img = '<div style="width:60px;height:60px;border-radius:8px;background:var(--slate-200);display:flex;align-items:center;justify-content:center;flex-shrink:0">📰</div>';
+        } else {
+          var first = atts[0];
+          var thumb = first.isImage ? '<img src="' + first.url + '">' :
+            '<a href="' + first.url + '" target="_blank" style="width:60px;height:60px;border-radius:8px;background:var(--slate-200);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:22px;text-decoration:none">📎</a>';
+          img = '<div style="position:relative;flex-shrink:0">' + thumb + (atts.length > 1 ? '<span class="attach-count" style="position:absolute;bottom:-4px;left:-4px">+' + (atts.length - 1) + '</span>' : '') + '</div>';
+        }
         return '<div class="news-item">' + img +
           '<div class="ni-body"><h4>' + escapeHtml(n.title) + '</h4>' +
           '<div class="ni-meta"><span class="tag ' + (n.status !== 'منشور' ? 'draft' : '') + '">' + n.category + '</span>' +
