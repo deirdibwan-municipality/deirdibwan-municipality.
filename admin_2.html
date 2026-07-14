@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>لوحة تحكم العلاقات العامة — بلدية دير دبوان</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;900&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/SheetJS/0.18.5/xlsx.full.min.js"></script>
+<style>
+  :root {
+    --navy: #0d2240; --navy-light: #162d52; --blue: #1a4a8a; --sky: #2a7dd4; --sky-soft: #dbeafe;
+    --gold: #b8860b; --gold-light: #fef9e7; --green: #15643e; --green-light: #dcfce7;
+    --red: #b91c1c; --red-light: #fee2e2; --slate-50: #f8fafc; --slate-100: #f1f5f9;
+    --slate-200: #e2e8f0; --slate-300: #cbd5e1; --slate-400: #94a3b8; --slate-500: #64748b;
+    --slate-700: #334155; --slate-900: #0f172a; --white: #fff;
+    --radius-sm: 6px; --radius: 10px; --radius-lg: 16px;
+    --shadow: 0 1px 6px rgba(13,34,64,.08), 0 2px 14px rgba(13,34,64,.05);
+    --shadow-md: 0 4px 18px rgba(13,34,64,.10); --transition: .2s ease;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Cairo', sans-serif; background: var(--slate-50); color: var(--slate-700); line-height: 1.7; min-height: 100vh; }
+  .btn { display: inline-flex; align-items: center; gap: 6px; padding: 10px 20px; border-radius: var(--radius-sm); font-family: inherit; font-size: 13.5px; font-weight: 700; cursor: pointer; border: none; transition: var(--transition); }
+  .btn-primary { background: var(--sky); color: #fff; }
+  .btn-primary:hover { background: var(--blue); }
+  .btn-navy { background: var(--navy); color: #fff; }
+  .btn-navy:hover { background: var(--navy-light); }
+  .btn-ghost { background: var(--slate-100); color: var(--slate-700); border: 1px solid var(--slate-200); }
+  .btn-ghost:hover { background: var(--slate-200); }
+  .btn-danger { background: var(--red-light); color: var(--red); }
+  .btn-danger:hover { background: #fecaca; }
+  .btn-sm { padding: 6px 14px; font-size: 12.5px; }
+
+  #loginScreen { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: linear-gradient(135deg, var(--navy) 0%, #162d52 60%, #1a4a8a 100%); padding: 20px; }
+  .login-box { background: #fff; border-radius: var(--radius-lg); padding: 40px 34px; max-width: 380px; width: 100%; text-align: center; box-shadow: var(--shadow-md); }
+  .login-box h1 { font-size: 18px; color: var(--navy); font-weight: 900; margin-bottom: 6px; }
+  .login-box p { font-size: 13px; color: var(--slate-500); margin-bottom: 24px; }
+  .login-box input { width: 100%; padding: 11px 14px; border: 1.5px solid var(--slate-200); border-radius: var(--radius-sm); font-family: inherit; font-size: 14px; outline: none; margin-bottom: 12px; text-align: center; }
+  .login-box input:focus { border-color: var(--sky); }
+  .login-box .btn { width: 100%; justify-content: center; padding: 11px; font-size: 14px; }
+  .login-error { display: none; background: var(--red-light); color: var(--red); font-size: 12.5px; font-weight: 700; padding: 10px 14px; border-radius: var(--radius-sm); margin-top: 12px; }
+
+  #dashboard { display: none; }
+  .topbar { background: var(--navy); color: #fff; padding: 14px 5%; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; }
+  .topbar h1 { font-size: 15px; font-weight: 900; }
+  .topbar .who { font-size: 12px; color: rgba(255,255,255,.65); }
+  .tabs { display: flex; gap: 8px; padding: 16px 5% 0; background: #fff; border-bottom: 1px solid var(--slate-200); }
+  .tab-btn { font-family: inherit; padding: 12px 20px; border: none; background: none; font-size: 14px; font-weight: 700; color: var(--slate-500); cursor: pointer; border-bottom: 3px solid transparent; }
+  .tab-btn.active { color: var(--navy); border-bottom-color: var(--sky); }
+  .panel { display: none; padding: 28px 5% 60px; max-width: 1100px; margin: 0 auto; }
+  .panel.active { display: block; }
+  .panel-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; flex-wrap: wrap; gap: 10px; }
+  .panel-head h2 { font-size: 18px; color: var(--navy); font-weight: 900; }
+
+  .card { background: #fff; border-radius: var(--radius-lg); border: 1px solid var(--slate-200); box-shadow: var(--shadow); padding: 22px; margin-bottom: 18px; }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .form-group { margin-bottom: 14px; }
+  .form-group label { display: block; font-size: 12.5px; font-weight: 700; color: var(--navy); margin-bottom: 5px; }
+  .form-group input, .form-group select, .form-group textarea {
+    width: 100%; padding: 9px 12px; border: 1.5px solid var(--slate-200); border-radius: var(--radius-sm);
+    font-family: inherit; font-size: 13.5px; background: #fff; outline: none;
+  }
+  .form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color: var(--sky); }
+  .form-group textarea { resize: vertical; min-height: 90px; }
+
+  .news-item { display: flex; gap: 14px; align-items: center; padding: 14px; border: 1px solid var(--slate-200); border-radius: var(--radius); margin-bottom: 10px; background: var(--slate-50); }
+  .news-item img { width: 60px; height: 60px; object-fit: cover; border-radius: 8px; flex-shrink: 0; background: var(--slate-200); }
+  .news-item .ni-body { flex: 1; min-width: 0; }
+  .news-item h4 { font-size: 14px; color: var(--navy); margin-bottom: 4px; }
+  .news-item .ni-meta { font-size: 11.5px; color: var(--slate-400); display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+  .tag { display: inline-block; padding: 2px 9px; border-radius: 20px; font-size: 10.5px; font-weight: 700; background: var(--sky-soft); color: var(--blue); }
+  .tag.draft { background: var(--slate-100); color: var(--slate-500); }
+  .ni-actions { display: flex; gap: 6px; flex-shrink: 0; }
+
+  .amount-row { display: grid; grid-template-columns: 1fr 140px 34px; gap: 8px; margin-bottom: 8px; align-items: center; }
+  .amount-row input { padding: 8px 10px; border: 1.5px solid var(--slate-200); border-radius: var(--radius-sm); font-family: inherit; font-size: 13px; }
+  .row-remove { width: 32px; height: 32px; border-radius: 8px; border: 1px solid var(--red-light); background: var(--red-light); color: var(--red); cursor: pointer; font-size: 15px; }
+  .add-row-btn { font-family: inherit; font-size: 12.5px; font-weight: 700; color: var(--sky); background: none; border: 1.5px dashed var(--sky); border-radius: var(--radius-sm); padding: 7px 14px; cursor: pointer; margin-top: 4px; }
+
+  .totals-strip { display: flex; gap: 14px; flex-wrap: wrap; margin: 18px 0; }
+  .total-box { flex: 1; min-width: 140px; background: var(--slate-50); border: 1px solid var(--slate-200); border-radius: var(--radius); padding: 14px; text-align: center; }
+  .total-box .tv { font-size: 18px; font-weight: 900; color: var(--navy); }
+  .total-box .tl { font-size: 11.5px; color: var(--slate-400); margin-top: 3px; }
+  .total-box.surplus .tv { color: var(--green); }
+
+  .report-row { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; border: 1px solid var(--slate-200); border-radius: var(--radius-sm); background: var(--slate-50); margin-bottom: 8px; flex-wrap: wrap; gap: 8px; }
+  .report-row .rr-left { font-size: 13px; font-weight: 700; color: var(--navy); }
+  .report-row .rr-sub { font-size: 11.5px; color: var(--slate-400); }
+  .chart-wrap { max-width: 420px; margin: 20px auto 0; }
+  .section-label { font-size: 11px; font-weight: 700; color: var(--sky); letter-spacing: .08em; text-transform: uppercase; margin-bottom: 6px; }
+
+  #toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(20px); background: var(--slate-900); color: white; padding: 13px 24px; border-radius: var(--radius); font-size: 13.5px; font-weight: 700; box-shadow: var(--shadow-md); z-index: 9999; opacity: 0; transition: opacity .3s, transform .3s; pointer-events: none; }
+  #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  #toast.success { background: var(--green); }
+  #toast.error { background: var(--red); }
+
+  @media (max-width: 700px) {
+    .form-row { grid-template-columns: 1fr; }
+    .amount-row { grid-template-columns: 1fr 100px 34px; }
+  }
+</style>
+</head>
+<body>
+
+<div id="loginScreen">
+  <div class="login-box">
+    <h1>لوحة تحكم العلاقات العامة</h1>
+    <p>بلدية دير دبوان — أدخل كلمة السر للمتابعة</p>
+    <form id="loginForm" onsubmit="return handleLogin(event)">
+      <input type="password" id="passwordInput" placeholder="كلمة السر" required autocomplete="current-password">
+      <button type="submit" class="btn btn-primary">دخول</button>
+    </form>
+    <div class="login-error" id="loginError">⚠️ كلمة السر غير صحيحة.</div>
+  </div>
+</div>
+
+<div id="dashboard">
+  <div class="topbar">
+    <h1>🏛️ لوحة تحكم العلاقات العامة</h1>
+    <div style="display:flex;align-items:center;gap:14px">
+      <span class="who" id="whoAmI"></span>
+      <button class="btn btn-ghost btn-sm" onclick="logout()">تسجيل الخروج</button>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab-btn active" data-tab="newsTab" onclick="switchTab('newsTab', this)">📰 إدارة الأخبار</button>
+    <button class="tab-btn" data-tab="finTab" onclick="switchTab('finTab', this)">📊 التقارير المالية</button>
+  </div>
+
+  <div class="panel active" id="newsTab">
+    <div class="panel-head">
+      <h2>الأخبار والإعلانات</h2>
+      <button class="btn btn-primary" onclick="openNewsForm()">+ إضافة خبر جديد</button>
+    </div>
+
+    <div class="card" id="newsFormCard" style="display:none">
+      <h3 style="font-size:14px;color:var(--navy);margin-bottom:16px" id="newsFormTitle">إضافة خبر جديد</h3>
+      <form id="newsForm">
+        <input type="hidden" id="newsId">
+        <div class="form-group">
+          <label>عنوان الخبر <span style="color:var(--red)">*</span></label>
+          <input type="text" id="newsTitle" required placeholder="مثال: بلدية دير دبوان تعلن عن بدء مشروع تأهيل شارع...">
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>التصنيف</label>
+            <select id="newsCategory">
+              <option>أخبار البلدية</option>
+              <option>إعلانات</option>
+              <option>مناقصات</option>
+              <option>قرارات</option>
+              <option>فعاليات</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>تاريخ النشر</label>
+            <input type="date" id="newsDate">
+          </div>
+        </div>
+        <div class="form-group">
+          <label>المحتوى <span style="color:var(--red)">*</span></label>
+          <textarea id="newsContent" rows="5" required placeholder="نص الخبر الكامل..."></textarea>
+        </div>
+        <div class="form-group">
+          <label>صورة الخبر</label>
+          <input type="file" id="newsImage" accept="image/*" onchange="previewNewsImage(this)">
+          <img id="newsImagePreview" style="display:none;max-width:140px;margin-top:8px;border-radius:8px">
+        </div>
+        <div class="form-group">
+          <label>الحالة</label>
+          <select id="newsStatus">
+            <option value="منشور">منشور — يظهر على الموقع فوراً</option>
+            <option value="مسودة">مسودة — محفوظ ولا يظهر بعد</option>
+          </select>
+        </div>
+        <div style="display:flex;gap:10px">
+          <button type="submit" class="btn btn-primary">💾 حفظ الخبر</button>
+          <button type="button" class="btn btn-ghost" onclick="closeNewsForm()">إلغاء</button>
+        </div>
+      </form>
+    </div>
+
+    <div id="newsList"><p style="color:var(--slate-400);font-size:13px">⏳ جارٍ تحميل الأخبار...</p></div>
+  </div>
+
+  <div class="panel" id="finTab">
+    <div class="panel-head"><h2>إدخال تقرير مالي</h2></div>
+
+    <div class="card">
+      <div class="form-row">
+        <div class="form-group">
+          <label>نوع التقرير</label>
+          <select id="finType" onchange="onFinTypeChange()">
+            <option value="monthly">شهري</option>
+            <option value="quarterly">ربعي</option>
+            <option value="yearly">سنوي</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>السنة</label>
+          <input type="number" id="finYear" value="2026" min="2020" max="2100">
+        </div>
+      </div>
+      <div class="form-group" id="finPeriodWrap">
+        <label id="finPeriodLabel">الشهر</label>
+        <select id="finPeriod"></select>
+      </div>
+      <div class="form-group">
+        <label>عنوان التقرير (اختياري)</label>
+        <input type="text" id="finLabel" placeholder="مثال: التقرير المالي لشهر 7/2026">
+      </div>
+
+      <div class="section-label">💰 الإيرادات</div>
+      <div id="revenueRows"></div>
+      <button type="button" class="add-row-btn" onclick="addAmountRow('revenueRows')">+ إضافة بند إيراد</button>
+
+      <div class="section-label" style="margin-top:20px">💸 المصروفات</div>
+      <div id="expenseRows"></div>
+      <button type="button" class="add-row-btn" onclick="addAmountRow('expenseRows')">+ إضافة بند مصروف</button>
+
+      <div class="totals-strip">
+        <div class="total-box"><div class="tv" id="liveRevenue">0</div><div class="tl">إجمالي الإيرادات</div></div>
+        <div class="total-box"><div class="tv" id="liveExpense">0</div><div class="tl">إجمالي المصروفات</div></div>
+        <div class="total-box surplus"><div class="tv" id="liveSurplus">0</div><div class="tl">الفائض</div></div>
+      </div>
+
+      <button class="btn btn-navy" onclick="saveFinancialReport()">💾 حفظ التقرير</button>
+    </div>
+
+    <div class="panel-head"><h2>التقارير المحفوظة</h2></div>
+    <div id="finList" class="card"><p style="color:var(--slate-400);font-size:13px">⏳ جارٍ التحميل...</p></div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+  var SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyy_z17IzTzWRvPgzdO539pcUdIafvRJG6EvlBJ4f5faQ7wE96nQpRyGchktyh7hjFb/exec"; // استبدله برابط النشر بعد تحديث Code.gs
+
+  var currentPassword = null, newsImageData = null;
+  var revenueCounter = 0, expenseCounter = 0, allReports = [], chartInstance = null;
+
+  var CATEGORY_ITEMS = { revenueRows: ['رسوم رخص','ضريبة أملاك','منح','مشاريع','أخرى'], expenseRows: ['رواتب','مشاريع','خدمات','أخرى'] };
+
+  window.onload = function() {
+    populatePeriodOptions();
+    addAmountRow('revenueRows');
+    addAmountRow('expenseRows');
+    document.getElementById('finYear').value = new Date().getFullYear();
+    // دخول تلقائي إذا كانت كلمة السر محفوظة من قبل بهذا المتصفح
+    var saved = sessionStorage.getItem('adminPassword');
+    if (saved) { document.getElementById('passwordInput').value = saved; tryLogin(saved); }
+  };
+
+  function handleLogin(e) {
+    e.preventDefault();
+    tryLogin(document.getElementById('passwordInput').value);
+    return false;
+  }
+
+  function tryLogin(password) {
+    currentPassword = password;
+    apiPost({ action: 'verify_password' }).then(function(res) {
+      if (!res.success) { showLoginError(); return; }
+      document.getElementById('loginError').style.display = 'none';
+      document.getElementById('loginScreen').style.display = 'none';
+      document.getElementById('dashboard').style.display = 'block';
+      document.getElementById('whoAmI').textContent = 'مسؤول لوحة التحكم';
+      sessionStorage.setItem('adminPassword', currentPassword);
+      loadNewsAdmin();
+      loadFinancialList();
+    }).catch(function() { showLoginError('⚠️ تعذّر الاتصال بالخادم'); });
+  }
+
+  function showLoginError(msg) {
+    var el = document.getElementById('loginError');
+    el.textContent = msg || '⚠️ كلمة السر غير صحيحة.';
+    el.style.display = 'block';
+  }
+
+  function logout() {
+    currentPassword = null;
+    sessionStorage.removeItem('adminPassword');
+    document.getElementById('dashboard').style.display = 'none';
+    document.getElementById('loginScreen').style.display = 'flex';
+    document.getElementById('passwordInput').value = '';
+  }
+
+  function showToast(msg, type) {
+    var t = document.getElementById('toast');
+    t.textContent = msg; t.className = 'show ' + (type || '');
+    clearTimeout(t._timer);
+    t._timer = setTimeout(function() { t.className = ''; }, 3800);
+  }
+  function switchTab(id, btn) {
+    document.querySelectorAll('.panel').forEach(function(p) { p.classList.remove('active'); });
+    document.querySelectorAll('.tab-btn').forEach(function(b) { b.classList.remove('active'); });
+    document.getElementById(id).classList.add('active');
+    btn.classList.add('active');
+  }
+  function apiPost(payload) {
+    payload.password = currentPassword;
+    return fetch(SCRIPT_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify(payload) })
+      .then(function(r) { return r.json(); });
+  }
+  function apiGet(action, params) {
+    var url = SCRIPT_URL + '?action=' + action + '&password=' + encodeURIComponent(currentPassword || '');
+    for (var k in (params || {})) url += '&' + k + '=' + encodeURIComponent(params[k]);
+    return fetch(url).then(function(r) { return r.json(); });
+  }
+
+  function openNewsForm(item) {
+    document.getElementById('newsFormCard').style.display = 'block';
+    document.getElementById('newsFormTitle').textContent = item ? 'تعديل الخبر' : 'إضافة خبر جديد';
+    document.getElementById('newsId').value = item ? item.id : '';
+    document.getElementById('newsTitle').value = item ? item.title : '';
+    document.getElementById('newsCategory').value = item ? item.category : 'أخبار البلدية';
+    document.getElementById('newsDate').value = item ? item.publishDate : new Date().toISOString().slice(0,10);
+    document.getElementById('newsContent').value = item ? item.content : '';
+    document.getElementById('newsStatus').value = item ? item.status : 'منشور';
+    newsImageData = null;
+    var pv = document.getElementById('newsImagePreview');
+    if (item && item.imageUrl) { pv.src = item.imageUrl; pv.style.display = 'block'; } else { pv.style.display = 'none'; }
+    document.getElementById('newsFormCard').scrollIntoView({ behavior: 'smooth' });
+  }
+  function closeNewsForm() { document.getElementById('newsFormCard').style.display = 'none'; document.getElementById('newsForm').reset(); }
+  function previewNewsImage(input) {
+    var file = input.files[0]; if (!file) return;
+    var reader = new FileReader();
+    reader.onload = function(e) {
+      newsImageData = e.target.result;
+      var pv = document.getElementById('newsImagePreview');
+      pv.src = e.target.result; pv.style.display = 'block';
+    };
+    reader.readAsDataURL(file);
+  }
+
+  document.addEventListener('DOMContentLoaded', function() {
+    document.getElementById('newsForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+      var id = document.getElementById('newsId').value;
+      var payload = {
+        action: id ? 'update_news' : 'add_news',
+        id: id || undefined,
+        title: document.getElementById('newsTitle').value.trim(),
+        category: document.getElementById('newsCategory').value,
+        publishDate: document.getElementById('newsDate').value,
+        content: document.getElementById('newsContent').value.trim(),
+        status: document.getElementById('newsStatus').value
+      };
+      if (newsImageData) { payload.imageData = newsImageData; payload.imageName = 'news_' + Date.now() + '.jpg'; }
+      apiPost(payload).then(function(res) {
+        if (res.success) { showToast('✅ تم حفظ الخبر بنجاح', 'success'); closeNewsForm(); loadNewsAdmin(); }
+        else showToast('⚠️ ' + (res.error || 'حدث خطأ'), 'error');
+      }).catch(function() { showToast('⚠️ تعذّر الاتصال بالخادم', 'error'); });
+    });
+  });
+
+  function loadNewsAdmin() {
+    apiGet('list_news').then(function(res) {
+      if (!res.success) { showToast('⚠️ ' + res.error, 'error'); return; }
+      var list = document.getElementById('newsList');
+      if (!res.news.length) { list.innerHTML = '<p style="color:var(--slate-400);font-size:13px">لا توجد أخبار بعد.</p>'; return; }
+      list.innerHTML = res.news.map(function(n) {
+        var img = n.imageUrl ? '<img src="' + n.imageUrl + '">' : '<div style="width:60px;height:60px;border-radius:8px;background:var(--slate-200);display:flex;align-items:center;justify-content:center;flex-shrink:0">📰</div>';
+        return '<div class="news-item">' + img +
+          '<div class="ni-body"><h4>' + escapeHtml(n.title) + '</h4>' +
+          '<div class="ni-meta"><span class="tag ' + (n.status !== 'منشور' ? 'draft' : '') + '">' + n.category + '</span>' +
+          '<span>' + (n.status !== 'منشور' ? 'مسودة' : 'منشور') + '</span><span>· ' + (n.publishDate || '') + '</span></div></div>' +
+          '<div class="ni-actions"><button class="btn btn-ghost btn-sm" onclick=\'editNewsItem(' + JSON.stringify(n).replace(/'/g,"&#39;") + ')\'>تعديل</button>' +
+          '<button class="btn btn-danger btn-sm" onclick="deleteNewsItem(\'' + n.id + '\')">حذف</button></div></div>';
+      }).join('');
+    }).catch(function() { showToast('⚠️ تعذّر تحميل الأخبار', 'error'); });
+  }
+  function editNewsItem(n) { openNewsForm(n); }
+  function deleteNewsItem(id) {
+    if (!confirm('هل أنت متأكد من حذف هذا الخبر؟')) return;
+    apiPost({ action: 'delete_news', id: id }).then(function(res) {
+      if (res.success) { showToast('🗑️ تم حذف الخبر', 'success'); loadNewsAdmin(); }
+      else showToast('⚠️ ' + (res.error || 'تعذّر الحذف'), 'error');
+    });
+  }
+  function escapeHtml(s) { var d = document.createElement('div'); d.textContent = s || ''; return d.innerHTML; }
+
+  function populatePeriodOptions() {
+    var type = document.getElementById('finType').value;
+    var sel = document.getElementById('finPeriod');
+    var wrap = document.getElementById('finPeriodWrap');
+    var months = ['يناير','فبراير','مارس','أبريل','مايو','يونيو','يوليو','أغسطس','سبتمبر','أكتوبر','نوفمبر','ديسمبر'];
+    if (type === 'monthly') {
+      wrap.style.display = 'block'; document.getElementById('finPeriodLabel').textContent = 'الشهر';
+      sel.innerHTML = months.map(function(m, i) { return '<option value="' + (i+1) + '">' + m + '</option>'; }).join('');
+    } else if (type === 'quarterly') {
+      wrap.style.display = 'block'; document.getElementById('finPeriodLabel').textContent = 'الربع';
+      sel.innerHTML = ['الربع الأول','الربع الثاني','الربع الثالث','الربع الرابع'].map(function(q, i) { return '<option value="Q' + (i+1) + '">' + q + '</option>'; }).join('');
+    } else {
+      wrap.style.display = 'none';
+    }
+  }
+  function onFinTypeChange() { populatePeriodOptions(); }
+
+  function addAmountRow(containerId, item) {
+    var container = document.getElementById(containerId);
+    var idx = containerId === 'revenueRows' ? revenueCounter++ : expenseCounter++;
+    var rowId = containerId + '_' + idx;
+    var options = CATEGORY_ITEMS[containerId].map(function(c) { return '<option ' + (item && item.label === c ? 'selected' : '') + '>' + c + '</option>'; }).join('');
+    var div = document.createElement('div');
+    div.className = 'amount-row'; div.id = rowId;
+    div.innerHTML = '<select class="row-label">' + options + '<option ' + (item && CATEGORY_ITEMS[containerId].indexOf(item.label) === -1 ? 'selected' : '') + '>مخصص...</option></select>' +
+      '<input class="row-amount" type="number" step="0.01" placeholder="المبلغ (شيقل)" value="' + (item ? item.amount : '') + '" oninput="updateLiveTotals()">' +
+      '<button type="button" class="row-remove" onclick="document.getElementById(\'' + rowId + '\').remove(); updateLiveTotals();">✕</button>';
+    container.appendChild(div);
+    updateLiveTotals();
+  }
+
+  function collectRows(containerId) {
+    var rows = document.querySelectorAll('#' + containerId + ' .amount-row');
+    var out = [];
+    rows.forEach(function(r) {
+      var label = r.querySelector('.row-label').value;
+      var amount = parseFloat(r.querySelector('.row-amount').value) || 0;
+      if (amount > 0) out.push({ label: label, amount: amount });
+    });
+    return out;
+  }
+
+  function updateLiveTotals() {
+    var rev = collectRows('revenueRows').reduce(function(s, r) { return s + r.amount; }, 0);
+    var exp = collectRows('expenseRows').reduce(function(s, r) { return s + r.amount; }, 0);
+    document.getElementById('liveRevenue').textContent = rev.toLocaleString('en-US');
+    document.getElementById('liveExpense').textContent = exp.toLocaleString('en-US');
+    document.getElementById('liveSurplus').textContent = (rev - exp).toLocaleString('en-US');
+  }
+
+  function saveFinancialReport() {
+    var revenues = collectRows('revenueRows');
+    var expenses = collectRows('expenseRows');
+    if (!revenues.length && !expenses.length) { showToast('⚠️ أضف بند إيراد أو مصروف واحد على الأقل', 'error'); return; }
+    var type = document.getElementById('finType').value;
+    var payload = {
+      action: 'save_financial',
+      reportType: type,
+      year: document.getElementById('finYear').value,
+      period: type === 'yearly' ? '' : document.getElementById('finPeriod').value,
+      label: document.getElementById('finLabel').value.trim(),
+      revenues: revenues, expenses: expenses
+    };
+    apiPost(payload).then(function(res) {
+      if (res.success) { showToast('✅ تم حفظ التقرير المالي', 'success'); loadFinancialList(); }
+      else showToast('⚠️ ' + (res.error || 'حدث خطأ'), 'error');
+    }).catch(function() { showToast('⚠️ تعذّر الاتصال بالخادم', 'error'); });
+  }
+
+  function loadFinancialList() {
+    apiGet('list_financial').then(function(res) {
+      if (!res.success) { showToast('⚠️ ' + res.error, 'error'); return; }
+      allReports = res.reports;
+      var box = document.getElementById('finList');
+      if (!allReports.length) { box.innerHTML = '<p style="color:var(--slate-400);font-size:13px">لا توجد تقارير محفوظة بعد.</p>'; return; }
+      var typeLabel = { monthly: 'شهري', quarterly: 'ربعي', yearly: 'سنوي' };
+      box.innerHTML = allReports.map(function(r) {
+        return '<div class="report-row"><div><div class="rr-left">' + (r.label || (typeLabel[r.reportType] + ' ' + r.year + (r.period ? ' / ' + r.period : ''))) +
+          '</div><div class="rr-sub">إيرادات: ' + r.totalRevenue.toLocaleString('en-US') + ' ش · مصروفات: ' + r.totalExpense.toLocaleString('en-US') + ' ش · فائض: ' + r.surplus.toLocaleString('en-US') + ' ش</div></div>' +
+          '<div style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn btn-ghost btn-sm" onclick="viewReport(\'' + r.id + '\')">📊 عرض</button>' +
+          '<button class="btn btn-ghost btn-sm" onclick="editReport(\'' + r.id + '\')">تعديل</button>' +
+          '<button class="btn btn-danger btn-sm" onclick="deleteReport(\'' + r.id + '\')">حذف</button></div></div>';
+      }).join('') + '<div class="chart-wrap"><canvas id="finChart"></canvas></div>' +
+        '<div style="display:flex;gap:10px;justify-content:center;margin-top:16px" id="exportButtons"></div>';
+    }).catch(function() { showToast('⚠️ تعذّر تحميل التقارير', 'error'); });
+  }
+
+  function findReport(id) { return allReports.find(function(r) { return r.id === id; }); }
+
+  function editReport(id) {
+    var r = findReport(id); if (!r) return;
+    document.getElementById('finType').value = r.reportType;
+    populatePeriodOptions();
+    document.getElementById('finYear').value = r.year;
+    if (r.reportType !== 'yearly') document.getElementById('finPeriod').value = r.period;
+    document.getElementById('finLabel').value = r.label || '';
+    document.getElementById('revenueRows').innerHTML = '';
+    document.getElementById('expenseRows').innerHTML = '';
+    revenueCounter = 0; expenseCounter = 0;
+    (r.revenues.length ? r.revenues : [{}]).forEach(function(item) { addAmountRow('revenueRows', item); });
+    (r.expenses.length ? r.expenses : [{}]).forEach(function(item) { addAmountRow('expenseRows', item); });
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function deleteReport(id) {
+    if (!confirm('هل أنت متأكد من حذف هذا التقرير؟')) return;
+    apiPost({ action: 'delete_financial', id: id }).then(function(res) {
+      if (res.success) { showToast('🗑️ تم حذف التقرير', 'success'); loadFinancialList(); }
+      else showToast('⚠️ ' + (res.error || 'تعذّر الحذف'), 'error');
+    });
+  }
+
+  function viewReport(id) {
+    var r = findReport(id); if (!r) return;
+    var ctx = document.getElementById('finChart');
+    if (chartInstance) chartInstance.destroy();
+    var labels = r.revenues.map(function(x){return x.label;}).concat(r.expenses.map(function(x){return x.label + ' (مصروف)';}));
+    var data = r.revenues.map(function(x){return x.amount;}).concat(r.expenses.map(function(x){return -x.amount;}));
+    chartInstance = new Chart(ctx, {
+      type: 'bar',
+      data: { labels: labels, datasets: [{ label: 'شيقل', data: data,
+        backgroundColor: data.map(function(v){ return v >= 0 ? '#2a7dd4' : '#b91c1c'; }) }] },
+      options: { responsive: true, plugins: { legend: { display: false } } }
+    });
+    renderExportButtons(r);
+  }
+
+  function renderExportButtons(r) {
+    document.getElementById('exportButtons').innerHTML =
+      '<button class="btn btn-ghost btn-sm" onclick="exportReportPDF(\'' + r.id + '\')">📄 تحميل PDF</button>' +
+      '<button class="btn btn-ghost btn-sm" onclick="exportReportExcel(\'' + r.id + '\')">📊 تحميل Excel</button>';
+  }
+
+  function exportReportPDF(id) {
+    var r = findReport(id); if (!r) return;
+    var doc = new jspdf.jsPDF();
+    doc.setFontSize(14);
+    doc.text('Deir Debwan Municipality - Financial Report', 14, 16);
+    doc.setFontSize(10);
+    doc.text((r.label || (r.reportType + ' ' + r.year + ' ' + r.period)), 14, 24);
+    var y = 36;
+    doc.setFontSize(11); doc.text('Revenues:', 14, y); y += 6;
+    r.revenues.forEach(function(item) { doc.setFontSize(9); doc.text(item.label + ' : ' + item.amount, 18, y); y += 6; });
+    y += 4; doc.setFontSize(11); doc.text('Expenses:', 14, y); y += 6;
+    r.expenses.forEach(function(item) { doc.setFontSize(9); doc.text(item.label + ' : ' + item.amount, 18, y); y += 6; });
+    y += 6; doc.setFontSize(11);
+    doc.text('Total Revenue: ' + r.totalRevenue, 14, y); y += 6;
+    doc.text('Total Expense: ' + r.totalExpense, 14, y); y += 6;
+    doc.text('Surplus: ' + r.surplus, 14, y);
+    doc.save('financial-report-' + r.year + '-' + (r.period || 'annual') + '.pdf');
+  }
+
+  function exportReportExcel(id) {
+    var r = findReport(id); if (!r) return;
+    var rows = [['البند','النوع','المبلغ (شيقل)']];
+    r.revenues.forEach(function(item) { rows.push([item.label, 'إيراد', item.amount]); });
+    r.expenses.forEach(function(item) { rows.push([item.label, 'مصروف', item.amount]); });
+    rows.push(['إجمالي الإيرادات', '', r.totalRevenue]);
+    rows.push(['إجمالي المصروفات', '', r.totalExpense]);
+    rows.push(['الفائض', '', r.surplus]);
+    var ws = XLSX.utils.aoa_to_sheet(rows);
+    var wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'التقرير المالي');
+    XLSX.writeFile(wb, 'financial-report-' + r.year + '-' + (r.period || 'annual') + '.xlsx');
+  }
+</script>
+</body>
+</html>
