@@ -91,6 +91,11 @@
   .chart-wrap { max-width: 420px; margin: 20px auto 0; }
   .section-label { font-size: 11px; font-weight: 700; color: var(--sky); letter-spacing: .08em; text-transform: uppercase; margin-bottom: 6px; }
 
+  .file-chip { display: inline-flex; align-items: center; gap: 8px; padding: 8px 12px; border: 1.5px solid var(--slate-200); border-radius: var(--radius-sm); background: var(--slate-50); font-size: 12.5px; margin-top: 8px; }
+  .file-chip a { color: var(--blue); font-weight: 700; text-decoration: none; }
+  .file-chip a:hover { text-decoration: underline; }
+  .file-chip .fc-remove { cursor: pointer; color: var(--red); font-weight: 900; margin-right: 4px; }
+
   #toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(20px); background: var(--slate-900); color: white; padding: 13px 24px; border-radius: var(--radius); font-size: 13.5px; font-weight: 700; box-shadow: var(--shadow-md); z-index: 9999; opacity: 0; transition: opacity .3s, transform .3s; pointer-events: none; }
   #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
   #toast.success { background: var(--green); }
@@ -165,9 +170,13 @@
           <textarea id="newsContent" rows="5" required placeholder="نص الخبر الكامل..."></textarea>
         </div>
         <div class="form-group">
-          <label>صورة الخبر</label>
-          <input type="file" id="newsImage" accept="image/*" onchange="previewNewsImage(this)">
+          <label>مرفق الخبر (صورة أو أي ملف: PDF، Word، Excel...)</label>
+          <input type="file" id="newsImage" onchange="previewNewsImage(this)">
           <img id="newsImagePreview" style="display:none;max-width:140px;margin-top:8px;border-radius:8px">
+          <div id="newsFilePreview" style="display:none" class="file-chip">
+            <span>📎</span> <span id="newsFileNameLabel"></span>
+            <span class="fc-remove" onclick="clearNewsFile()">✕</span>
+          </div>
         </div>
         <div class="form-group">
           <label>الحالة</label>
@@ -221,6 +230,15 @@
       <div id="expenseRows"></div>
       <button type="button" class="add-row-btn" onclick="addAmountRow('expenseRows')">+ إضافة بند مصروف</button>
 
+      <div class="form-group" style="margin-top:20px">
+        <label>مرفق التقرير المالي (اختياري — PDF، Excel، Word...)</label>
+        <input type="file" id="finFile" onchange="previewFinFile(this)">
+        <div id="finFilePreview" style="display:none" class="file-chip">
+          <span>📎</span> <span id="finFileNameLabel"></span>
+          <span class="fc-remove" onclick="clearFinFile()">✕</span>
+        </div>
+      </div>
+
       <div class="totals-strip">
         <div class="total-box"><div class="tv" id="liveRevenue">0</div><div class="tl">إجمالي الإيرادات</div></div>
         <div class="total-box"><div class="tv" id="liveExpense">0</div><div class="tl">إجمالي المصروفات</div></div>
@@ -240,7 +258,9 @@
 <script>
   var SCRIPT_URL = "https://script.google.com/macros/s/AKfycbywVRbWyW1bhLDbSuRoObtDrxQK5cchoMhgfFE0rUEqxtRRNNHL6-e0LGOOWSLXgtU/exec";
 
-  var currentPassword = null, newsImageData = null;
+  var currentPassword = null;
+  var newsFileData = null, newsFileName = null, newsFileIsImage = false;
+  var finFileData = null, finFileName = null;
   var revenueCounter = 0, expenseCounter = 0, allReports = [], chartInstance = null;
 
   var CATEGORY_ITEMS = { revenueRows: ['رسوم رخص','ضريبة أملاك','منح','مشاريع','أخرى'], expenseRows: ['رواتب','مشاريع','خدمات','أخرى'] };
@@ -321,19 +341,46 @@
     document.getElementById('newsDate').value = item ? item.publishDate : new Date().toISOString().slice(0,10);
     document.getElementById('newsContent').value = item ? item.content : '';
     document.getElementById('newsStatus').value = item ? item.status : 'منشور';
-    newsImageData = null;
+    clearNewsFile();
     var pv = document.getElementById('newsImagePreview');
-    if (item && item.imageUrl) { pv.src = item.imageUrl; pv.style.display = 'block'; } else { pv.style.display = 'none'; }
+    var fpv = document.getElementById('newsFilePreview');
+    if (item && item.fileUrl) {
+      var isImg = /\.(jpe?g|png|gif|webp)(\?|$)/i.test(item.fileUrl) || item.fileIsImage;
+      if (isImg) { pv.src = item.fileUrl; pv.style.display = 'block'; fpv.style.display = 'none'; }
+      else {
+        pv.style.display = 'none';
+        document.getElementById('newsFileNameLabel').innerHTML = '<a href="' + item.fileUrl + '" target="_blank">مرفق حالي — عرض</a>';
+        fpv.style.display = 'inline-flex';
+      }
+    } else { pv.style.display = 'none'; fpv.style.display = 'none'; }
     document.getElementById('newsFormCard').scrollIntoView({ behavior: 'smooth' });
   }
-  function closeNewsForm() { document.getElementById('newsFormCard').style.display = 'none'; document.getElementById('newsForm').reset(); }
+  function closeNewsForm() { document.getElementById('newsFormCard').style.display = 'none'; document.getElementById('newsForm').reset(); clearNewsFile(); }
+
+  function clearNewsFile() {
+    newsFileData = null; newsFileName = null; newsFileIsImage = false;
+    document.getElementById('newsImage').value = '';
+    document.getElementById('newsImagePreview').style.display = 'none';
+    document.getElementById('newsFilePreview').style.display = 'none';
+  }
+
   function previewNewsImage(input) {
     var file = input.files[0]; if (!file) return;
+    newsFileName = file.name;
+    newsFileIsImage = file.type.indexOf('image/') === 0;
     var reader = new FileReader();
     reader.onload = function(e) {
-      newsImageData = e.target.result;
+      newsFileData = e.target.result;
       var pv = document.getElementById('newsImagePreview');
-      pv.src = e.target.result; pv.style.display = 'block';
+      var fpv = document.getElementById('newsFilePreview');
+      if (newsFileIsImage) {
+        pv.src = e.target.result; pv.style.display = 'block';
+        fpv.style.display = 'none';
+      } else {
+        pv.style.display = 'none';
+        document.getElementById('newsFileNameLabel').textContent = file.name;
+        fpv.style.display = 'inline-flex';
+      }
     };
     reader.readAsDataURL(file);
   }
@@ -351,7 +398,7 @@
         content: document.getElementById('newsContent').value.trim(),
         status: document.getElementById('newsStatus').value
       };
-      if (newsImageData) { payload.imageData = newsImageData; payload.imageName = 'news_' + Date.now() + '.jpg'; }
+      if (newsFileData) { payload.fileData = newsFileData; payload.fileName = newsFileName; }
       apiPost(payload).then(function(res) {
         if (res.success) { showToast('✅ تم حفظ الخبر بنجاح', 'success'); closeNewsForm(); loadNewsAdmin(); }
         else showToast('⚠️ ' + (res.error || 'حدث خطأ'), 'error');
@@ -365,7 +412,10 @@
       var list = document.getElementById('newsList');
       if (!res.news.length) { list.innerHTML = '<p style="color:var(--slate-400);font-size:13px">لا توجد أخبار بعد.</p>'; return; }
       list.innerHTML = res.news.map(function(n) {
-        var img = n.imageUrl ? '<img src="' + n.imageUrl + '">' : '<div style="width:60px;height:60px;border-radius:8px;background:var(--slate-200);display:flex;align-items:center;justify-content:center;flex-shrink:0">📰</div>';
+        var isImg = n.fileUrl && (/\.(jpe?g|png|gif|webp)(\?|$)/i.test(n.fileUrl) || n.fileIsImage);
+        var img = isImg ? '<img src="' + n.fileUrl + '">' :
+          (n.fileUrl ? '<div style="width:60px;height:60px;border-radius:8px;background:var(--slate-200);display:flex;align-items:center;justify-content:center;flex-shrink:0"><a href="' + n.fileUrl + '" target="_blank" style="font-size:22px;text-decoration:none">📎</a></div>'
+                     : '<div style="width:60px;height:60px;border-radius:8px;background:var(--slate-200);display:flex;align-items:center;justify-content:center;flex-shrink:0">📰</div>');
         return '<div class="news-item">' + img +
           '<div class="ni-body"><h4>' + escapeHtml(n.title) + '</h4>' +
           '<div class="ni-meta"><span class="tag ' + (n.status !== 'منشور' ? 'draft' : '') + '">' + n.category + '</span>' +
@@ -435,6 +485,23 @@
     document.getElementById('liveSurplus').textContent = (rev - exp).toLocaleString('en-US');
   }
 
+  function previewFinFile(input) {
+    var file = input.files[0]; if (!file) return;
+    finFileName = file.name;
+    var reader = new FileReader();
+    reader.onload = function(e) {
+      finFileData = e.target.result;
+      document.getElementById('finFileNameLabel').textContent = file.name;
+      document.getElementById('finFilePreview').style.display = 'inline-flex';
+    };
+    reader.readAsDataURL(file);
+  }
+  function clearFinFile() {
+    finFileData = null; finFileName = null;
+    document.getElementById('finFile').value = '';
+    document.getElementById('finFilePreview').style.display = 'none';
+  }
+
   function saveFinancialReport() {
     var revenues = collectRows('revenueRows');
     var expenses = collectRows('expenseRows');
@@ -448,8 +515,9 @@
       label: document.getElementById('finLabel').value.trim(),
       revenues: revenues, expenses: expenses
     };
+    if (finFileData) { payload.fileData = finFileData; payload.fileName = finFileName; }
     apiPost(payload).then(function(res) {
-      if (res.success) { showToast('✅ تم حفظ التقرير المالي', 'success'); loadFinancialList(); }
+      if (res.success) { showToast('✅ تم حفظ التقرير المالي', 'success'); clearFinFile(); loadFinancialList(); }
       else showToast('⚠️ ' + (res.error || 'حدث خطأ'), 'error');
     }).catch(function() { showToast('⚠️ تعذّر الاتصال بالخادم', 'error'); });
   }
@@ -462,8 +530,9 @@
       if (!allReports.length) { box.innerHTML = '<p style="color:var(--slate-400);font-size:13px">لا توجد تقارير محفوظة بعد.</p>'; return; }
       var typeLabel = { monthly: 'شهري', quarterly: 'ربعي', yearly: 'سنوي' };
       box.innerHTML = allReports.map(function(r) {
+        var attach = r.fileUrl ? ' · <a href="' + r.fileUrl + '" target="_blank" style="color:var(--blue);font-weight:700">📎 المرفق</a>' : '';
         return '<div class="report-row"><div><div class="rr-left">' + (r.label || (typeLabel[r.reportType] + ' ' + r.year + (r.period ? ' / ' + r.period : ''))) +
-          '</div><div class="rr-sub">إيرادات: ' + r.totalRevenue.toLocaleString('en-US') + ' ش · مصروفات: ' + r.totalExpense.toLocaleString('en-US') + ' ش · فائض: ' + r.surplus.toLocaleString('en-US') + ' ش</div></div>' +
+          '</div><div class="rr-sub">إيرادات: ' + r.totalRevenue.toLocaleString('en-US') + ' ش · مصروفات: ' + r.totalExpense.toLocaleString('en-US') + ' ش · فائض: ' + r.surplus.toLocaleString('en-US') + ' ش' + attach + '</div></div>' +
           '<div style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn btn-ghost btn-sm" onclick="viewReport(\'' + r.id + '\')">📊 عرض</button>' +
           '<button class="btn btn-ghost btn-sm" onclick="editReport(\'' + r.id + '\')">تعديل</button>' +
           '<button class="btn btn-danger btn-sm" onclick="deleteReport(\'' + r.id + '\')">حذف</button></div></div>';
@@ -486,6 +555,11 @@
     revenueCounter = 0; expenseCounter = 0;
     (r.revenues.length ? r.revenues : [{}]).forEach(function(item) { addAmountRow('revenueRows', item); });
     (r.expenses.length ? r.expenses : [{}]).forEach(function(item) { addAmountRow('expenseRows', item); });
+    clearFinFile();
+    if (r.fileUrl) {
+      document.getElementById('finFileNameLabel').innerHTML = '<a href="' + r.fileUrl + '" target="_blank">مرفق حالي — عرض</a>';
+      document.getElementById('finFilePreview').style.display = 'inline-flex';
+    }
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
 
