@@ -12,8 +12,6 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;900&display=swap" rel="stylesheet">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/SheetJS/0.18.5/xlsx.full.min.js"></script>
   <style>
     :root {
       --navy:        #0d2240;
@@ -295,10 +293,10 @@
     </div>
   </div>
   <div class="hero-stats">
-    <div class="hero-stat"><div class="hero-stat-val">1956</div><div class="hero-stat-lbl">سنة التأسيس</div></div>
-    <div class="hero-stat"><div class="hero-stat-val">+12000</div><div class="hero-stat-lbl">نسمة في الخدمة</div></div>
-    <div class="hero-stat"><div class="hero-stat-val">5</div><div class="hero-stat-lbl">خدمات إلكترونية</div></div>
-    <div class="hero-stat"><div class="hero-stat-val">24/7</div><div class="hero-stat-lbl">دعم متواصل</div></div>
+    <div class="hero-stat"><div class="hero-stat-val">١٩٥٦</div><div class="hero-stat-lbl">سنة التأسيس</div></div>
+    <div class="hero-stat"><div class="hero-stat-val">+١٢٠٠٠</div><div class="hero-stat-lbl">نسمة في الخدمة</div></div>
+    <div class="hero-stat"><div class="hero-stat-val">٥</div><div class="hero-stat-lbl">خدمات إلكترونية</div></div>
+    <div class="hero-stat"><div class="hero-stat-val">٢٤/٧</div><div class="hero-stat-lbl">دعم متواصل</div></div>
   </div>
 </section>
 <div class="quick-strip" role="navigation" aria-label="روابط سريعة">
@@ -356,7 +354,7 @@
         <div class="service-card-icon">💳</div>
         <div class="service-card-badge soon">قريباً</div>
         <h3>الاستعلام المالي المركزي</h3>
-        <p>الاستعلام عن مستحقاتك في في ضريبة الاملاك و المالية .</p>
+        <p>الاستعلام عن مستحقاتك ورسوم الحساب وعدادات المياه والكهرباء من النظام المركزي مباشرة.</p>
         <button class="btn btn-disabled btn-sm" disabled aria-disabled="true">قيد التطوير</button>
       </div>
       <div class="service-card" role="listitem">
@@ -398,9 +396,9 @@
       </div>
       <div>
         <div class="stat-row" style="margin-bottom:28px">
-          <div class="stat-box"><div class="val">1956</div><div class="lbl">سنة التأسيس</div></div>
-          <div class="stat-box"><div class="val">68</div><div class="lbl">عامًا من الخدمة</div></div>
-          <div class="stat-box"><div class="val">12 الف مواطن</div><div class="lbl">مواطن مخدوم</div></div>
+          <div class="stat-box"><div class="val">١٩٥٦</div><div class="lbl">سنة التأسيس</div></div>
+          <div class="stat-box"><div class="val">٦٨</div><div class="lbl">عامًا من الخدمة</div></div>
+          <div class="stat-box"><div class="val">+١٢ك</div><div class="lbl">مواطن مخدوم</div></div>
         </div>
         <div style="background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.12); border-radius:var(--radius-lg); padding:24px;">
           <h3 style="color:#fff; font-size:16px; font-weight:900; margin-bottom:14px;">📍 رسالتنا</h3>
@@ -713,9 +711,8 @@
         </table>
       </div>
       <div class="chart-wrap" style="max-width:420px;margin:20px auto"><canvas id="publicFinChart"></canvas></div>
-      <div style="display:flex;gap:10px;justify-content:center;margin-bottom:10px">
-        <button class="btn btn-ghost btn-sm" onclick="exportPublicPDF()">📄 عرض / تحميل PDF</button>
-        <button class="btn btn-ghost btn-sm" onclick="exportPublicExcel()">📊 تحميل Excel</button>
+      <div id="publicReportAttachmentWrap" style="display:none;justify-content:center;margin-bottom:10px">
+        <a id="publicReportAttachmentLink" href="#" target="_blank" rel="noopener" class="btn btn-primary btn-sm">📎 تحميل التقرير الرسمي (PDF)</a>
       </div>
     </div>
     <div style="margin-top:16px;padding-top:14px;border-top:1px solid var(--slate-200)">
@@ -737,7 +734,7 @@
 </div>
 <div id="toast" role="status" aria-live="polite"></div>
 <script>
-  var SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxKtVXxfGqwkEveR28PVvHs6NsSQz8SMuiljHEfG2ZwUnpvoyj70_Z88LsdDgU_Hgr7/exec";
+  var SCRIPT_URL = "https://script.google.com/macros/s/AKfycbySIssbGupGn860fH7HMtfojrrMXvZRPZUo8FnIHRXy05mQiQfFg1T6BphD8TM5VkSX/exec";
   var selectedFileData = null, selectedFileName = null;
   var selectedReportType = "monthly", selectedReportYear = "2026", selectedReportPeriod = null;
   var currentPublicReport = null, publicChartInstance = null;
@@ -970,58 +967,39 @@
         },
         options: { responsive: true, plugins: { legend: { position: 'bottom' } } }
       });
+
+      var attWrap = document.getElementById('publicReportAttachmentWrap');
+      if (d.fileUrl) {
+        document.getElementById('publicReportAttachmentLink').href = d.fileUrl;
+        attWrap.style.display = 'flex';
+      } else {
+        attWrap.style.display = 'none';
+      }
     }).catch(function() {
       document.getElementById('reportContentContainer').style.display = 'none';
       document.getElementById('noReportAlert').style.display = 'block';
     });
   }
 
-  function exportPublicPDF() {
-    if (!currentPublicReport) return;
-    var d = currentPublicReport;
-    var doc = new jspdf.jsPDF();
-    doc.setFontSize(14); doc.text('Deir Debwan Municipality - Financial Report', 14, 16);
-    doc.setFontSize(10); doc.text((d.label || (d.reportType + ' ' + d.year + ' ' + d.period)), 14, 24);
-    var y = 36;
-    doc.setFontSize(11); doc.text('Revenues:', 14, y); y += 6;
-    d.revenues.forEach(function(item) { doc.setFontSize(9); doc.text(item.label + ' : ' + item.amount, 18, y); y += 6; });
-    y += 4; doc.setFontSize(11); doc.text('Expenses:', 14, y); y += 6;
-    d.expenses.forEach(function(item) { doc.setFontSize(9); doc.text(item.label + ' : ' + item.amount, 18, y); y += 6; });
-    y += 6; doc.setFontSize(11);
-    doc.text('Total Revenue: ' + d.totalRevenue, 14, y); y += 6;
-    doc.text('Total Expense: ' + d.totalExpense, 14, y); y += 6;
-    doc.text('Surplus: ' + d.surplus, 14, y);
-    doc.save('financial-report-' + d.year + '-' + (d.period || 'annual') + '.pdf');
-  }
-
-  function exportPublicExcel() {
-    if (!currentPublicReport) return;
-    var d = currentPublicReport;
-    var rows = [['البند','النوع','المبلغ (شيقل)']];
-    d.revenues.forEach(function(item) { rows.push([item.label, 'إيراد', item.amount]); });
-    d.expenses.forEach(function(item) { rows.push([item.label, 'مصروف', item.amount]); });
-    rows.push(['إجمالي الإيرادات', '', d.totalRevenue]);
-    rows.push(['إجمالي المصروفات', '', d.totalExpense]);
-    rows.push(['الفائض', '', d.surplus]);
-    var ws = XLSX.utils.aoa_to_sheet(rows);
-    var wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, 'التقرير المالي');
-    XLSX.writeFile(wb, 'financial-report-' + d.year + '-' + (d.period || 'annual') + '.xlsx');
-  }
-
   var reportsCache = null, activeArchiveYear = 'all';
   function loadArchiveReports() {
     if (reportsCache) { renderArchive(reportsCache); return; }
-    fetch('reports.json?t=' + Date.now())
+    fetch(SCRIPT_URL + '?action=list_financial')
       .then(function(r) { return r.json(); })
-      .then(function(data) { reportsCache = data; renderArchive(data); })
+      .then(function(res) {
+        if (!res.success) throw new Error(res.error || 'فشل التحميل');
+        // نعرض فقط التقارير يلي فيها مرفق حقيقي مرفوع من الإدارة
+        reportsCache = res.reports.filter(function(r) { return r.fileUrl; });
+        renderArchive(reportsCache);
+      })
       .catch(function() {
-        document.getElementById('reports-list').innerHTML = '<div class="no-data-msg" style="color:var(--red-light)">⚠️ تعذّر تحميل الأرشيف. تأكد من وجود ملف reports.json</div>';
+        document.getElementById('reports-list').innerHTML = '<div class="no-data-msg" style="color:var(--red-light)">⚠️ تعذّر تحميل الأرشيف حالياً.</div>';
       });
   }
   function renderArchive(data) {
+    var typeLabel = { monthly: 'شهري', quarterly: 'ربعي', yearly: 'سنوي' };
     var years = [];
-    data.forEach(function(r) { var y = r.date.split('-')[0]; if (years.indexOf(y) === -1) years.push(y); });
+    data.forEach(function(r) { var y = String(r.year); if (years.indexOf(y) === -1) years.push(y); });
     years.sort().reverse();
     var filterEl = document.getElementById('archive-year-filters');
     filterEl.innerHTML = '';
@@ -1033,12 +1011,13 @@
       b.textContent = y; b.className = 'chip-btn ' + (activeArchiveYear===y?'active':'inactive');
       b.onclick = function() { activeArchiveYear=y; renderArchive(data); }; filterEl.appendChild(b);
     });
-    var filtered = data.filter(function(r) { return activeArchiveYear==='all' || r.date.startsWith(activeArchiveYear); }).sort(function(a,b) { return b.date.localeCompare(a.date); });
+    var filtered = data.filter(function(r) { return activeArchiveYear==='all' || String(r.year)===activeArchiveYear; })
+      .sort(function(a,b) { return String(b.year + (b.period||'')).localeCompare(String(a.year + (a.period||''))); });
     var list = document.getElementById('reports-list');
-    if (!filtered.length) { list.innerHTML = '<div class="no-data-msg">لا توجد تقارير لهذه السنة</div>'; document.getElementById('reports-count').textContent=''; return; }
+    if (!filtered.length) { list.innerHTML = '<div class="no-data-msg">لا توجد تقارير مرفقة لهذه السنة بعد</div>'; document.getElementById('reports-count').textContent=''; return; }
     list.innerHTML = filtered.map(function(r) {
-      var isPdf = r.type==='pdf', iconBg = isPdf?'#fff3e8':'#e8f0fd', icon = isPdf?'📄':'📊';
-      return '<div class="report-item"><div class="report-item-left"><div class="report-icon" style="background:'+iconBg+'">'+icon+'</div><div><p style="margin:0;font-size:13.5px;font-weight:700;color:var(--navy)">'+r.title+'</p><p style="margin:0;font-size:12px;color:var(--slate-400)">'+r.type.toUpperCase()+' · رُفع: '+formatDate(r.date)+'</p></div></div><a href="'+r.url+'" target="_blank" rel="noopener" class="btn btn-primary btn-sm" style="white-space:nowrap;flex-shrink:0">🔗 فتح</a></div>';
+      var title = r.label || (typeLabel[r.reportType] + ' ' + r.year + (r.period ? ' / ' + r.period : ''));
+      return '<div class="report-item"><div class="report-item-left"><div class="report-icon" style="background:#fff3e8">📄</div><div><p style="margin:0;font-size:13.5px;font-weight:700;color:var(--navy)">'+title+'</p><p style="margin:0;font-size:12px;color:var(--slate-400)">تقرير '+typeLabel[r.reportType]+'</p></div></div><a href="'+r.fileUrl+'" target="_blank" rel="noopener" class="btn btn-primary btn-sm" style="white-space:nowrap;flex-shrink:0">📥 تحميل</a></div>';
     }).join('');
     document.getElementById('reports-count').textContent = filtered.length + ' تقرير';
   }
