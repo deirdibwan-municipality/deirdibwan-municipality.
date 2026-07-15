@@ -7,8 +7,6 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;900&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/SheetJS/0.18.5/xlsx.full.min.js"></script>
 <style>
   :root {
     --navy: #0d2240; --navy-light: #162d52; --blue: #1a4a8a; --sky: #2a7dd4; --sky-soft: #dbeafe;
@@ -233,7 +231,7 @@
       <button type="button" class="add-row-btn" onclick="addAmountRow('expenseRows')">+ إضافة بند مصروف</button>
 
       <div class="form-group" style="margin-top:20px">
-        <label>مرفق التقرير المالي (اختياري — PDF، Excel، Word...)</label>
+        <label>مرفق التقرير المالي (PDF، Excel، Word...)</label>
         <input type="file" id="finFile" onchange="previewFinFile(this)">
         <div id="finFilePreview" style="display:none" class="file-chip">
           <span>📎</span> <span id="finFileNameLabel"></span>
@@ -541,14 +539,13 @@
       if (!allReports.length) { box.innerHTML = '<p style="color:var(--slate-400);font-size:13px">لا توجد تقارير محفوظة بعد.</p>'; return; }
       var typeLabel = { monthly: 'شهري', quarterly: 'ربعي', yearly: 'سنوي' };
       box.innerHTML = allReports.map(function(r) {
-        var attach = r.fileUrl ? ' · <a href="' + r.fileUrl + '" target="_blank" style="color:var(--blue);font-weight:700">📎 المرفق</a>' : '';
+        var attach = r.fileUrl ? ' · <a href="' + r.fileUrl + '" target="_blank" style="color:var(--blue);font-weight:700">📎 تحميل المرفق</a>' : '';
         return '<div class="report-row"><div><div class="rr-left">' + (r.label || (typeLabel[r.reportType] + ' ' + r.year + (r.period ? ' / ' + r.period : ''))) +
           '</div><div class="rr-sub">إيرادات: ' + r.totalRevenue.toLocaleString('en-US') + ' ش · مصروفات: ' + r.totalExpense.toLocaleString('en-US') + ' ش · فائض: ' + r.surplus.toLocaleString('en-US') + ' ش' + attach + '</div></div>' +
-          '<div style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn btn-ghost btn-sm" onclick="viewReport(\'' + r.id + '\')">📊 عرض</button>' +
+          '<div style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn btn-ghost btn-sm" onclick="viewReport(\'' + r.id + '\')">📊 عرض الرسم البياني</button>' +
           '<button class="btn btn-ghost btn-sm" onclick="editReport(\'' + r.id + '\')">تعديل</button>' +
           '<button class="btn btn-danger btn-sm" onclick="deleteReport(\'' + r.id + '\')">حذف</button></div></div>';
-      }).join('') + '<div class="chart-wrap"><canvas id="finChart"></canvas></div>' +
-        '<div style="display:flex;gap:10px;justify-content:center;margin-top:16px" id="exportButtons"></div>';
+      }).join('') + '<div class="chart-wrap"><canvas id="finChart"></canvas></div>';
     }).catch(function() { showToast('⚠️ تعذّر تحميل التقارير', 'error'); });
   }
 
@@ -594,46 +591,6 @@
         backgroundColor: data.map(function(v){ return v >= 0 ? '#2a7dd4' : '#b91c1c'; }) }] },
       options: { responsive: true, plugins: { legend: { display: false } } }
     });
-    renderExportButtons(r);
-  }
-
-  function renderExportButtons(r) {
-    document.getElementById('exportButtons').innerHTML =
-      '<button class="btn btn-ghost btn-sm" onclick="exportReportPDF(\'' + r.id + '\')">📄 تحميل PDF</button>' +
-      '<button class="btn btn-ghost btn-sm" onclick="exportReportExcel(\'' + r.id + '\')">📊 تحميل Excel</button>';
-  }
-
-  function exportReportPDF(id) {
-    var r = findReport(id); if (!r) return;
-    var doc = new jspdf.jsPDF();
-    doc.setFontSize(14);
-    doc.text('Deir Debwan Municipality - Financial Report', 14, 16);
-    doc.setFontSize(10);
-    doc.text((r.label || (r.reportType + ' ' + r.year + ' ' + r.period)), 14, 24);
-    var y = 36;
-    doc.setFontSize(11); doc.text('Revenues:', 14, y); y += 6;
-    r.revenues.forEach(function(item) { doc.setFontSize(9); doc.text(item.label + ' : ' + item.amount, 18, y); y += 6; });
-    y += 4; doc.setFontSize(11); doc.text('Expenses:', 14, y); y += 6;
-    r.expenses.forEach(function(item) { doc.setFontSize(9); doc.text(item.label + ' : ' + item.amount, 18, y); y += 6; });
-    y += 6; doc.setFontSize(11);
-    doc.text('Total Revenue: ' + r.totalRevenue, 14, y); y += 6;
-    doc.text('Total Expense: ' + r.totalExpense, 14, y); y += 6;
-    doc.text('Surplus: ' + r.surplus, 14, y);
-    doc.save('financial-report-' + r.year + '-' + (r.period || 'annual') + '.pdf');
-  }
-
-  function exportReportExcel(id) {
-    var r = findReport(id); if (!r) return;
-    var rows = [['البند','النوع','المبلغ (شيقل)']];
-    r.revenues.forEach(function(item) { rows.push([item.label, 'إيراد', item.amount]); });
-    r.expenses.forEach(function(item) { rows.push([item.label, 'مصروف', item.amount]); });
-    rows.push(['إجمالي الإيرادات', '', r.totalRevenue]);
-    rows.push(['إجمالي المصروفات', '', r.totalExpense]);
-    rows.push(['الفائض', '', r.surplus]);
-    var ws = XLSX.utils.aoa_to_sheet(rows);
-    var wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, 'التقرير المالي');
-    XLSX.writeFile(wb, 'financial-report-' + r.year + '-' + (r.period || 'annual') + '.xlsx');
   }
 </script>
 </body>
