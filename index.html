@@ -265,7 +265,7 @@
 <nav class="navbar" role="navigation" aria-label="التنقل الرئيسي">
   <div class="nav-inner">
     <a href="#" class="nav-brand" aria-label="الصفحة الرئيسية لبلدية دير دبوان">
-      <img src="android-chrome-512x512.png" alt="" onerror="document.getElementById('heroSeal').style.display='none'">
+     <img src="android-chrome-512x512.png" alt="" onerror="document.getElementById('heroSeal').style.display='none'">
       <div class="nav-brand-text">
         <span>بلدية دير دبوان</span>
         <span>Deir Debwan Municipality</span>
@@ -505,7 +505,7 @@
 <footer role="contentinfo">
   <div class="footer-grid">
     <div class="footer-brand">
-     <img src="android-chrome-512x512.png" alt="" onerror="document.getElementById('heroSeal').style.display='none'">
+    <img src="android-chrome-512x512.png" alt="" onerror="document.getElementById('heroSeal').style.display='none'">
       <p style="font-size:14px;font-weight:700;color:rgba(255,255,255,.8);margin-bottom:8px;">بلدية دير دبوان</p>
       <p>هيئة حكومية محلية تأسست عام 1956، تخدم مدينة دير دبوان في محافظة رام الله والبيرة، فلسطين.</p>
     </div>
@@ -617,6 +617,7 @@
       <div class="form-group">
         <label for="serviceType">نوع المعاملة المطلوبة</label>
         <select id="serviceType" onchange="toggleKoushan(this.value)">
+          <option value="" selected disabled>اختر المعاملة المطلوبة</option>
           <option>براءة ذمة</option>
           <option>مخطط موقع</option>
           <option>كتاب رسمي</option>
@@ -886,12 +887,13 @@
     e.preventDefault();
     if (!validate([{ id:'serviceReqName', label:'اسم المواطن' }, { id:'serviceReqID', label:'رقم الهوية' }, { id:'serviceReqPhone', label:'رقم الهاتف' }])) return;
     var sType = document.getElementById('serviceType').value;
+    if (!sType) { showToast('⚠️ يرجى اختيار نوع المعاملة المطلوبة', 'error'); return; }
     if (sType === 'مخطط موقع' && !selectedFileData) { showToast('⚠️ يرجى رفع صورة كوشان القطعة', 'error'); return; }
     if ((sType === 'براءة ذمة' || sType === 'كتاب رسمي') && !selectedFileData) { showToast('⚠️ يرجى رفع صورة الهوية الشخصية أو جواز السفر', 'error'); return; }
     var payload = { formType:'service', name:document.getElementById('serviceReqName').value.trim(), idCard:document.getElementById('serviceReqID').value.trim(), phone:document.getElementById('serviceReqPhone').value.trim(), type:sType, details:document.getElementById('serviceReqDetails').value.trim() };
     if (selectedFileData) { payload.fileData = selectedFileData; payload.fileName = selectedFileName; }
     sendData(payload, 'serviceSubmitBtn', 's-dot', 'servicesModal', '✅ تم تقديم طلبك الرسمي وحفظه في الأرشيف!');
-    this.reset(); removeFile(); toggleKoushan('براءة ذمة');
+    this.reset(); removeFile(); toggleKoushan('');
   });
 
   document.getElementById('quickContactForm').addEventListener('submit', function(e) {
