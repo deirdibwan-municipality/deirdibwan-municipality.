@@ -145,9 +145,9 @@
     .contact-item h4 { font-size: 13px; font-weight: 700; color: var(--navy); margin-bottom: 3px; }
     .contact-item p, .contact-item a { font-size: 14px; color: var(--slate-500); text-decoration: none; }
     .contact-item a:hover { color: var(--sky); }
-    .social-row { display: flex; gap: 10px; margin-top: 20px; }
-    .social-btn { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 18px; text-decoration: none; border: 1px solid var(--slate-200); background: var(--white); transition: var(--transition); }
-    .social-btn:hover { border-color: var(--sky); background: var(--sky-soft); }
+    .social-row { display: flex; gap: 10px; margin-top: 20px; flex-wrap: wrap; }
+    .social-btn { display: inline-flex; align-items: center; gap: 8px; padding: 9px 16px; border-radius: 10px; font-size: 13px; font-weight: 700; color: var(--slate-700); text-decoration: none; border: 1px solid var(--slate-200); background: var(--white); transition: var(--transition); white-space: nowrap; }
+    .social-btn:hover { border-color: var(--sky); background: var(--sky-soft); color: var(--blue); }
     .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(13,34,64,.65); backdrop-filter: blur(6px); z-index: 2000; justify-content: center; align-items: center; padding: 16px; }
     .modal-overlay.open { display: flex; }
     .news-detail-gallery { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 10px; }
@@ -265,7 +265,7 @@
 <nav class="navbar" role="navigation" aria-label="التنقل الرئيسي">
   <div class="nav-inner">
     <a href="#" class="nav-brand" aria-label="الصفحة الرئيسية لبلدية دير دبوان">
-      <img src="logo.jpg.jpg" alt="شعار بلدية دير دبوان" onerror="this.style.display='none'">
+      <img src="logo.jpg.jpg" alt="شعار بلدية دير دبوان" onerror="this.style.display='none'">>
       <div class="nav-brand-text">
         <span>بلدية دير دبوان</span>
         <span>Deir Debwan Municipality</span>
@@ -294,7 +294,7 @@
       </div>
     </div>
     <div class="hero-seal" aria-hidden="true" id="heroSeal">
-      <img src="logo.jpg.jpg" alt="" onerror="document.getElementById('heroSeal').style.display='none'">
+      <<img src="logo.jpg.jpg" alt="شعار بلدية دير دبوان" onerror="this.style.display='none'">
     </div>
   </div>
   <div class="hero-stats">
@@ -468,8 +468,8 @@
           </div>
         </div>
         <div class="social-row" aria-label="حسابات التواصل الاجتماعي">
-          <a href="https://www.facebook.com/DeirDebwanM/" target="_blank" rel="noopener" class="social-btn" aria-label="فيسبوك">ⓕ Facebook </a>
-          <a href="https://wa.me/972598497878?text=مرحبا%20اريد%20الاستفسار" class="social-btn" aria-label="واتساب"> 💬 𝑾𝒉𝒂𝒕𝒔𝑨pp</a>
+          <a href="https://www.facebook.com/DeirDebwanM/" target="_blank" rel="noopener" class="social-btn" aria-label="فيسبوك">📘 فيسبوك</a>
+          <a href="https://wa.me/972598497878?text=مرحبا%20اريد%20الاستفسار" class="social-btn" aria-label="واتساب">💬 واتساب</a>
         </div>
       </div>
       <div class="contact-card">
@@ -505,7 +505,7 @@
 <footer role="contentinfo">
   <div class="footer-grid">
     <div class="footer-brand">
-      <img src="logo.jpg.jpg" alt="شعار بلدية دير دبوان" onerror="this.style.display='none'">
+     <img src="logo.jpg.jpg" alt="شعار بلدية دير دبوان" onerror="this.style.display='none'">
       <p style="font-size:14px;font-weight:700;color:rgba(255,255,255,.8);margin-bottom:8px;">بلدية دير دبوان</p>
       <p>هيئة حكومية محلية تأسست عام 1956، تخدم مدينة دير دبوان في محافظة رام الله والبيرة، فلسطين.</p>
     </div>
