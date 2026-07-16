@@ -4,10 +4,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>لوحة تحكم العلاقات العامة — بلدية ديردبوان</title>
-  <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
-<link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
-<link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png">
-<link rel="manifest" href="site.webmanifest">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;900&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
@@ -260,8 +256,8 @@
 <div id="toast"></div>
 
 <script>
-  var SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxKtVXxfGqwkEveR28PVvHs6NsSQz8SMuiljHEfG2ZwUnpvoyj70_Z88LsdDgU_Hgr7/exec";
-   
+  var SCRIPT_URL = "https://script.google.com/macros/s/AKfycbySIssbGupGn860fH7HMtfojrrMXvZRPZUo8FnIHRXy05mQiQfFg1T6BphD8TM5VkSX/exec";
+
   var currentPassword = null;
   // newsAttachments: array of { name, isImage, dataUrl (new file, pending upload) | url (existing, already on Drive), existing (bool) }
   var newsAttachments = [];
@@ -349,11 +345,11 @@
     newsAttachments = [];
     if (item && item.attachments && item.attachments.length) {
       item.attachments.forEach(function(a) {
-        newsAttachments.push({ name: a.name || 'مرفق', url: a.url, isImage: !!a.isImage, existing: true });
+        newsAttachments.push({ name: a.name || 'مرفق', url: a.url, isImage: !!a.isImage, isVideo: !!a.isVideo, existing: true });
       });
     } else if (item && item.fileUrl) {
       // توافق مع بيانات قديمة كانت تحفظ مرفق واحد فقط
-      newsAttachments.push({ name: 'مرفق', url: item.fileUrl, isImage: !!item.fileIsImage, existing: true });
+      newsAttachments.push({ name: 'مرفق', url: item.fileUrl, isImage: !!item.fileIsImage, isVideo: false, existing: true });
     }
     document.getElementById('newsImage').value = '';
     renderNewsAttachments();
@@ -364,7 +360,7 @@
   function renderNewsAttachments() {
     var box = document.getElementById('newsFilesList');
     box.innerHTML = newsAttachments.map(function(a, i) {
-      var thumb = a.isImage ? '<img class="thumb" src="' + (a.url || a.dataUrl) + '">' : '<span>📎</span>';
+      var thumb = a.isImage ? '<img class="thumb" src="' + (a.url || a.dataUrl) + '">' : (a.isVideo ? '<span>🎥</span>' : '<span>📎</span>');
       var label = a.existing ? '<a href="' + a.url + '" target="_blank">' + escapeHtml(a.name) + '</a>' : escapeHtml(a.name);
       return '<span class="att-chip">' + thumb + '<span>' + label + '</span>' +
         '<span class="fc-remove" onclick="removeNewsAttachment(' + i + ')">✕</span></span>';
@@ -380,7 +376,12 @@
     files.forEach(function(file) {
       var reader = new FileReader();
       reader.onload = function(e) {
-        newsAttachments.push({ name: file.name, isImage: file.type.indexOf('image/') === 0, dataUrl: e.target.result, existing: false });
+        newsAttachments.push({
+          name: file.name,
+          isImage: file.type.indexOf('image/') === 0,
+          isVideo: file.type.indexOf('video/') === 0,
+          dataUrl: e.target.result, existing: false
+        });
         pending--;
         if (pending === 0) { renderNewsAttachments(); input.value = ''; }
       };
@@ -403,7 +404,7 @@
       };
       // المرفقات الموجودة أصلاً (existing) نبعث روابطها فقط، والملفات الجديدة نبعث محتواها لرفعها
       payload.keepAttachments = newsAttachments.filter(function(a) { return a.existing; })
-        .map(function(a) { return { name: a.name, url: a.url, isImage: a.isImage }; });
+        .map(function(a) { return { name: a.name, url: a.url, isImage: a.isImage, isVideo: a.isVideo }; });
       payload.newFiles = newsAttachments.filter(function(a) { return !a.existing; })
         .map(function(a) { return { fileData: a.dataUrl, fileName: a.name }; });
       apiPost(payload).then(function(res) {
@@ -426,7 +427,7 @@
         } else {
           var first = atts[0];
           var thumb = first.isImage ? '<img src="' + first.url + '">' :
-            '<a href="' + first.url + '" target="_blank" style="width:60px;height:60px;border-radius:8px;background:var(--slate-200);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:22px;text-decoration:none">📎</a>';
+            '<a href="' + first.url + '" target="_blank" style="width:60px;height:60px;border-radius:8px;background:var(--slate-200);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:22px;text-decoration:none">' + (first.isVideo ? '🎥' : '📎') + '</a>';
           img = '<div style="position:relative;flex-shrink:0">' + thumb + (atts.length > 1 ? '<span class="attach-count" style="position:absolute;bottom:-4px;left:-4px">+' + (atts.length - 1) + '</span>' : '') + '</div>';
         }
         return '<div class="news-item">' + img +
