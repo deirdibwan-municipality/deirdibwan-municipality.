@@ -8,10 +8,7 @@
   <meta property="og:title" content="بلدية دير دبوان - البوابة الإلكترونية الرسمية">
   <meta property="og:description" content="خدمات بلدية دير دبوان الإلكترونية - شكاوى، تقارير مالية، معاملات رسمية">
   <title>بلدية دير دبوان — البوابة الإلكترونية الرسمية</title>
-  <link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
-  <link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png">
-  <link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png">
-  <link rel="manifest" href="site.webmanifest">
+  <link rel="icon" type="image/x-icon" href="favicon.ico">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;900&display=swap" rel="stylesheet">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
@@ -130,7 +127,7 @@
     .stat-box .lbl { font-size: 12px; color: rgba(255,255,255,.6); margin-top: 4px; }
     .bg-slate { background: var(--slate-100); }
     .news-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; }
-    .news-card { background: var(--white); border-radius: var(--radius-lg); overflow: hidden; border: 1px solid var(--slate-200); box-shadow: var(--shadow); transition: var(--transition); }
+    .news-card { background: var(--white); border-radius: var(--radius-lg); overflow: hidden; border: 1px solid var(--slate-200); box-shadow: var(--shadow); transition: var(--transition); cursor: pointer; }
     .news-card:hover { transform: translateY(-3px); box-shadow: var(--shadow-md); }
     .news-card-img { height: 180px; background: var(--slate-200); overflow: hidden; }
     .news-card-img img { width: 100%; height: 100%; object-fit: cover; }
@@ -153,6 +150,11 @@
     .social-btn:hover { border-color: var(--sky); background: var(--sky-soft); }
     .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(13,34,64,.65); backdrop-filter: blur(6px); z-index: 2000; justify-content: center; align-items: center; padding: 16px; }
     .modal-overlay.open { display: flex; }
+    .news-detail-gallery { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 10px; }
+    .news-detail-gallery img { width: 100%; height: 140px; object-fit: cover; border-radius: var(--radius-sm); cursor: zoom-in; }
+    .news-detail-video { width: 100%; aspect-ratio: 16/9; border: none; border-radius: var(--radius-sm); background: #000; }
+    .news-detail-file-chip { display: inline-flex; align-items: center; gap: 8px; padding: 9px 14px; border: 1.5px solid var(--slate-200); border-radius: var(--radius-sm); background: var(--slate-50); font-size: 13px; font-weight: 700; color: var(--blue); text-decoration: none; }
+    .news-detail-file-chip:hover { background: var(--sky-soft); }
     .modal-box { background: var(--white); border-radius: var(--radius-lg); padding: 36px 32px 30px; width: 100%; max-width: 540px; position: relative; max-height: 90vh; overflow-y: auto; animation: popIn .2s ease; }
     .modal-box.wide { max-width: 700px; }
     @keyframes popIn { from { opacity:0; transform: scale(.94) translateY(10px) } to { opacity:1; transform:none } }
@@ -263,7 +265,7 @@
 <nav class="navbar" role="navigation" aria-label="التنقل الرئيسي">
   <div class="nav-inner">
     <a href="#" class="nav-brand" aria-label="الصفحة الرئيسية لبلدية دير دبوان">
-      <img src="android-chrome-512x512.png" alt="شعار بلدية دير دبوان" onerror="this.style.display='none'">
+      <img src="logo.jpg.jpg" alt="شعار بلدية دير دبوان" onerror="this.style.display='none'">
       <div class="nav-brand-text">
         <span>بلدية دير دبوان</span>
         <span>Deir Debwan Municipality</span>
@@ -292,14 +294,14 @@
       </div>
     </div>
     <div class="hero-seal" aria-hidden="true" id="heroSeal">
-      <img src="android-chrome-512x512.png" alt="شعار بلدية دير دبوان" onerror="this.style.display='none'">
+      <img src="logo.jpg.jpg" alt="" onerror="document.getElementById('heroSeal').style.display='none'">
     </div>
   </div>
   <div class="hero-stats">
-    <div class="hero-stat"><div class="hero-stat-val">1956</div><div class="hero-stat-lbl">سنة التأسيس</div></div>
-    <div class="hero-stat"><div class="hero-stat-val">12 الف</div><div class="hero-stat-lbl">نسمة في الخدمة</div></div>
-    <div class="hero-stat"><div class="hero-stat-val">5</div><div class="hero-stat-lbl">خدمات إلكترونية</div></div>
-    <div class="hero-stat"><div class="hero-stat-val">24/7</div><div class="hero-stat-lbl">دعم متواصل</div></div>
+    <div class="hero-stat"><div class="hero-stat-val">١٩٥٦</div><div class="hero-stat-lbl">سنة التأسيس</div></div>
+    <div class="hero-stat"><div class="hero-stat-val">+١٢٠٠٠</div><div class="hero-stat-lbl">نسمة في الخدمة</div></div>
+    <div class="hero-stat"><div class="hero-stat-val">٥</div><div class="hero-stat-lbl">خدمات إلكترونية</div></div>
+    <div class="hero-stat"><div class="hero-stat-val">٢٤/٧</div><div class="hero-stat-lbl">دعم متواصل</div></div>
   </div>
 </section>
 <div class="quick-strip" role="navigation" aria-label="روابط سريعة">
@@ -399,9 +401,9 @@
       </div>
       <div>
         <div class="stat-row" style="margin-bottom:28px">
-          <div class="stat-box"><div class="val">1956</div><div class="lbl">سنة التأسيس</div></div>
-          <div class="stat-box"><div class="val">68</div><div class="lbl">عامًا من الخدمة</div></div>
-          <div class="stat-box"><div class="val">12الف</div><div class="lbl">مواطن مخدوم</div></div>
+          <div class="stat-box"><div class="val">١٩٥٦</div><div class="lbl">سنة التأسيس</div></div>
+          <div class="stat-box"><div class="val">٦٨</div><div class="lbl">عامًا من الخدمة</div></div>
+          <div class="stat-box"><div class="val">+١٢ك</div><div class="lbl">مواطن مخدوم</div></div>
         </div>
         <div style="background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.12); border-radius:var(--radius-lg); padding:24px;">
           <h3 style="color:#fff; font-size:16px; font-weight:900; margin-bottom:14px;">📍 رسالتنا</h3>
@@ -503,7 +505,7 @@
 <footer role="contentinfo">
   <div class="footer-grid">
     <div class="footer-brand">
-     <img src="android-chrome-512x512.png" alt="شعار بلدية دير دبوان" onerror="this.style.display='none'">
+      <img src="logo.jpg.jpg" alt="شعار بلدية دير دبوان" onerror="this.style.display='none'">
       <p style="font-size:14px;font-weight:700;color:rgba(255,255,255,.8);margin-bottom:8px;">بلدية دير دبوان</p>
       <p>هيئة حكومية محلية تأسست عام 1956، تخدم مدينة دير دبوان في محافظة رام الله والبيرة، فلسطين.</p>
     </div>
@@ -735,9 +737,26 @@
     </div>
   </div>
 </div>
+
+<div class="modal-overlay" id="newsDetailModal" role="dialog" aria-modal="true" aria-labelledby="news-detail-title">
+  <div class="modal-box wide">
+    <button class="close-modal" onclick="closeModal('newsDetailModal')" aria-label="إغلاق">✕</button>
+    <div class="modal-header">
+      <div class="modal-icon" id="newsDetailIcon" style="background:var(--sky-soft)">📰</div>
+      <div>
+        <h2 id="news-detail-title">تفاصيل الخبر</h2>
+        <p id="newsDetailMeta"></p>
+      </div>
+    </div>
+    <div id="newsDetailMedia" style="display:flex;flex-direction:column;gap:14px;margin-bottom:18px"></div>
+    <p id="newsDetailContent" style="font-size:14.5px;line-height:2;color:var(--slate-700);white-space:pre-line;margin-bottom:18px"></p>
+    <div id="newsDetailFiles" style="display:flex;flex-wrap:wrap;gap:10px"></div>
+  </div>
+</div>
+
 <div id="toast" role="status" aria-live="polite"></div>
 <script>
-  var SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxKtVXxfGqwkEveR28PVvHs6NsSQz8SMuiljHEfG2ZwUnpvoyj70_Z88LsdDgU_Hgr7/exec";
+  var SCRIPT_URL = "https://script.google.com/macros/s/AKfycbySIssbGupGn860fH7HMtfojrrMXvZRPZUo8FnIHRXy05mQiQfFg1T6BphD8TM5VkSX/exec";
   var selectedFileData = null, selectedFileName = null;
   var selectedReportType = "monthly", selectedReportYear = "2026", selectedReportPeriod = null;
   var currentPublicReport = null, publicChartInstance = null;
@@ -1033,16 +1052,18 @@
   // الأخبار الديناميكية (تُدار من لوحة تحكم العلاقات العامة)
   // ══════════════════════════════════════════
   var NEWS_ICON = { 'أخبار البلدية':'🏛️', 'إعلانات':'📢', 'مناقصات':'📄', 'قرارات':'⚖️', 'فعاليات':'🎉' };
+  var publicNewsCache = [];
   function loadPublicNews() {
     fetch(SCRIPT_URL + '?action=list_news&limit=6')
       .then(function(r) { return r.json(); })
       .then(function(res) {
         var grid = document.getElementById('newsGrid');
         if (!res.success || !res.news.length) { grid.innerHTML = '<div class="no-data-msg">لا توجد أخبار منشورة حالياً.</div>'; return; }
-        grid.innerHTML = res.news.map(function(n) {
+        publicNewsCache = res.news;
+        grid.innerHTML = res.news.map(function(n, i) {
           var img = n.imageUrl ? '<div class="news-card-img"><img src="' + n.imageUrl + '" alt=""></div>' : '<div class="news-card-img placeholder" aria-hidden="true">' + (NEWS_ICON[n.category] || '📰') + '</div>';
           var excerpt = (n.content || '').slice(0, 130) + ((n.content || '').length > 130 ? '…' : '');
-          return '<article class="news-card" role="listitem">' + img +
+          return '<article class="news-card" role="listitem" tabindex="0" onclick="openNewsDetail(' + i + ')" onkeypress="if(event.key===\'Enter\')openNewsDetail(' + i + ')">' + img +
             '<div class="news-card-body"><div class="news-tag">' + n.category + '</div>' +
             '<h3>' + n.title + '</h3><p>' + excerpt + '</p>' +
             '<div class="news-meta">' + (n.publishDate ? formatDate(n.publishDate) : '') + '</div></div></article>';
@@ -1051,6 +1072,37 @@
       .catch(function() {
         document.getElementById('newsGrid').innerHTML = '<div class="no-data-msg">⚠️ تعذّر تحميل الأخبار حالياً.</div>';
       });
+  }
+
+  function openNewsDetail(i) {
+    var n = publicNewsCache[i];
+    if (!n) return;
+    document.getElementById('news-detail-title').textContent = n.title;
+    document.getElementById('newsDetailIcon').textContent = NEWS_ICON[n.category] || '📰';
+    document.getElementById('newsDetailMeta').textContent = n.category + (n.publishDate ? ' · ' + formatDate(n.publishDate) : '');
+    document.getElementById('newsDetailContent').textContent = n.content || '';
+
+    var atts = (n.attachments && n.attachments.length) ? n.attachments : (n.imageUrl ? [{ url: n.imageUrl, isImage: true }] : []);
+    var images = atts.filter(function(a) { return a.isImage; });
+    var videos = atts.filter(function(a) { return a.isVideo; });
+    var files = atts.filter(function(a) { return !a.isImage && !a.isVideo; });
+
+    var mediaHtml = '';
+    videos.forEach(function(v) {
+      mediaHtml += '<iframe class="news-detail-video" src="' + v.url + '" allow="autoplay; fullscreen" allowfullscreen></iframe>';
+    });
+    if (images.length) {
+      mediaHtml += '<div class="news-detail-gallery">' + images.map(function(im) {
+        return '<img src="' + im.url + '" alt="" onclick="window.open(\'' + im.url + '\', \'_blank\')">';
+      }).join('') + '</div>';
+    }
+    document.getElementById('newsDetailMedia').innerHTML = mediaHtml;
+
+    document.getElementById('newsDetailFiles').innerHTML = files.map(function(f) {
+      return '<a class="news-detail-file-chip" href="' + f.url + '" target="_blank" rel="noopener">📎 ' + (f.name || 'تحميل المرفق') + '</a>';
+    }).join('');
+
+    openModal('newsDetailModal');
   }
   loadPublicNews();
 </script>
